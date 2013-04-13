@@ -1,0 +1,47 @@
+#worlds were ALL the chests will turn into dayz chests
+enabled-worlds:
+- world
+#chance in % if the chest will turn into a trapped chest (a chest that spawns a zombie), 0 = disabled
+trapped-chests: 2
+drop:
+  #Will the content of the chest drop directly or after X seconds
+  fast: false
+  #MineZ-styled drop (if fast: false)
+  minez: true
+timing:
+  #time between chest acces and chest break in seconds, if fast-drop: false and if minez: false
+  time-until-break: 4
+  #maximum time between opening the chest and chest break in seconds, if minez: true and fast-drop: false
+  time-until-break-MineZ: 60
+  #time between chest break and chest respawn in seconds 
+  time-until-respawn: 180  
+##################################################
+#how to set items:                               #
+#example:                                        #
+#------------------------------------------------#
+#activated-configurations: chestcnf1             #
+#chestconf1:                                     #
+#  chancetopick:                                 #
+#  - 312|15|95|1 10~1                            #
+#     |   |  | |  |  enchantment level(optional) #                
+#     |   |  | |  enchantment id (optional)      #               
+#     |   |  | chance                            #
+#     |   | damage                               #
+#     |  quantity                                #
+#  item-id                                       #
+##################################################
+activated-configurations: 
+- conf1
+configurations:
+  conf1:
+    chancetopick: 0->20
+    maximum-items: 1
+    items:
+    - 273|1|10|50
+    - 274|1|0|50 34~3 35~2
+###################################################
+#DON'T EDIT  THIS!!!!!                            #
+###################################################
+chests:
+version: 0.1.11
+

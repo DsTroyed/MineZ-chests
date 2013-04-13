@@ -1,0 +1,10 @@
+name: MineZ-chests
+main: me.sirantony.minezchests.main
+version: 0.1.11
+description: MineZ-chests in minecraft
+author: Sir-Antony
+commands: 
+  mc:
+    description: the default command
+  minezchest:
+    description: the default command
