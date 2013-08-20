@@ -1,108 +1,129 @@
 package me.sirantony.minezchests;
 
+
+import java.util.List;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Chest;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-public class ChestBreak {
-  public main pl;
-	public ChestBreak(main instance) {
-		pl = instance;
-	}
-	
+
+public class ChestBreak{
+	public main pl;
 	public int tid;
 	public boolean ready = false;
-	
+
+	public ChestBreak(main instance){
+		this.pl = instance;
+	}
+
 	public void dropItems(ItemStack i, Location loc){
-		loc.getWorld().dropItem(loc, i); 		
+		loc.getWorld().dropItem(loc, i);
 	}
-	public void chestBreakMinez(final Chest chest){
-		
-		Integer timed = pl.getConfig().getInt("timing.time-until-break-MineZ") * 20;			
-		if (pl.minez == true){				    	  
-			for (ItemStack i : chest.getInventory()){
-				if (i == null){
-					break;
-				}else{
-					Location loc = chest.getLocation();
-					dropItems(i,loc);
-					chest.getInventory().remove(i);
-				}	
-				
-			}
-			chest.getBlock().setType(Material.AIR);	
-			pl.minez = false;
-			pl.chestRespawn(chest);			
-		}else{			
-			pl.getServer().getScheduler().scheduleSyncDelayedTask(pl, new Runnable()	    {
-				public void run(){	    
-					ready = true;
-				}
-		    }
-			, timed);
-			tid = pl.getServer().getScheduler().scheduleSyncRepeatingTask(pl, new Runnable(){
-				@Override
-				public void run() {						
-					Boolean empty = false;
-			        for (ItemStack stack : chest.getInventory()) {
-			             if (stack!=null&&stack.getType()!=null&&!stack.getType().equals(Material.AIR)) {			                 
-			                 break;   
-			             }else{			            	 
-			            	 empty = true;
-			            	 
-			             }
-			        }	
-			        if (empty == true){
-			        	 chest.getBlock().setType(Material.AIR);		            	 		            	 
-		            	 pl.getServer().getScheduler().cancelTask(tid);		            	 
-			        }   
-			        
-					else if(ready == true){
-						chestBreakFast(chest);						
-						
-					}
-				}
-			    
-			}, 20L, 20L);
-		}
-		
-	}
-	public void chestBreakFast(Chest chest){		    	  
-		for (ItemStack i : pl.itemchests.get(chest.getLocation())){
-			if (i == null){
+
+  	public void chestBreakMinez(final Chest chest, final Inventory inv, final Boolean respawn) {
+  		Integer timed = Integer.valueOf(this.pl.getConfig().getInt("timing.time-until-break-MineZ") * 20);
+  		if (this.pl.minez) {
+  			for (ItemStack i : inv) {
+  				if (i == null) {
+  					break;
+  				}
+  				Location loc = chest.getLocation();
+  				dropItems(i, loc);
+  				inv.remove(i);
+  			}
+
+  			this.pl.minez = false;
+  			if (respawn){
+  				ChestBreak.this.pl.chestRespawn(chest.getLocation());
+  			}else{
+  				List<String> L = pl.getConfig().getStringList("chunks");
+  				L.remove(chest.getLocation().getChunk().toString());
+  				pl.getConfig().set("chunks", L);
+  			}
+  		} else {
+  			this.pl.getServer().getScheduler().scheduleSyncDelayedTask(this.pl, new Runnable() {
+  				public void run() {
+  					ChestBreak.this.ready = true;
+  				}
+  			} , timed.intValue());
+	      	this.tid = this.pl.getServer().getScheduler().scheduleSyncRepeatingTask(this.pl, new Runnable(){
+	      		public void run() {
+	      			Boolean empty = Boolean.valueOf(false);
+	      			for (ItemStack stack : inv) {
+	      				if ((stack != null) && (stack.getType() != null) && (!stack.getType().equals(Material.AIR))) {
+	      					empty = false;
+	      					break;
+	      				}else{
+	      					empty = true;
+	      				}
+	            
+	      			}
+	      			
+		      		if (empty) {
+		      			pl.getServer().getScheduler().scheduleSyncDelayedTask(pl, new Runnable() {
+		        	        public void run() {
+		        	        	chest.getBlock().setType(Material.AIR);
+		        	            if (respawn){
+		        	            	ChestBreak.this.pl.chestRespawn(chest.getLocation());
+		        	            }else{
+		        	            	List<String> L = pl.getConfig().getStringList("chunks");
+		        	            	L.remove(chest.getLocation().getChunk().toString());
+		        	            	pl.getConfig().set("chunks", L);
+		        	            }
+		        	            ChestBreak.this.pl.getServer().getScheduler().cancelTask(ChestBreak.this.tid);
+		        	        }
+		      			}, 70L);
+		            
+		      		} else if (ChestBreak.this.ready) {
+		      			ChestBreak.this.chestBreakFast(chest, inv, true);
+		      			ChestBreak.this.pl.getServer().getScheduler().cancelTask(ChestBreak.this.tid);
+		      		}
+		      	}
+		    }, 20L, 20L);
+  		}
+  	}
+
+	public void chestBreakFast(Chest chest, Inventory inv, Boolean respawn) {
+		for (ItemStack i : (Inventory)this.pl.itemchests.get(chest.getLocation())) {
+			if (i == null) {
 				break;
-			}else{
-				Location loc = chest.getLocation();
-				dropItems(i,loc);
-				chest.getInventory().remove(i);
-			}	
-			
-		}
-		chest.getLocation().getBlock().setType(Material.AIR);		
-		pl.chestRespawn(chest);
-	}
-	public void chestBreakSlow(final Chest chest){
-		Integer time = pl.getConfig().getInt("timing.time-until-break") * 20;		
-		pl.getServer().getScheduler().scheduleSyncDelayedTask(pl, new Runnable(){
-			public void run(){	 
-				
-				for (ItemStack i : chest.getInventory()){					
-					if (i == null){
-						break;
-					}else{						
-						Location loc = chest.getLocation();
-						dropItems(i,loc);						
-				        chest.getInventory().remove(i);
-
-					}	
-					
-				} 
-				chest.getLocation().getBlock().setType(Material.AIR);		
-				pl.chestRespawn(chest);	        
 			}
+			Location loc = chest.getLocation();
+			dropItems(i, loc);
+			inv.remove(i);
 	    }
-		, time);
-	}	
-
+		
+	    if (respawn){
+	    	ChestBreak.this.pl.chestRespawn(chest.getLocation());
+	    }else{
+	    	List<String> L = pl.getConfig().getStringList("chunks");
+	    	L.remove(chest.getLocation().getChunk().toString());
+	    	pl.getConfig().set("chunks", L);
+	    }
+	}
+	public void chestBreakSlow(final Chest chest, final Inventory inv, final Boolean respawn) {
+	    Integer time = Integer.valueOf(this.pl.getConfig().getInt("timing.time-until-break") * 20);
+	    this.pl.getServer().getScheduler().scheduleSyncDelayedTask(this.pl, new Runnable(){
+	    	public void run() {
+	    		for (ItemStack i : inv) {
+	    			if (i == null) {
+	    				break;
+	    			}
+	    			Location loc = chest.getLocation();
+	    			ChestBreak.this.dropItems(i, loc);
+	    			inv.remove(i);
+	    		}
+	    		if (respawn){
+	    			ChestBreak.this.pl.chestRespawn(chest.getLocation());
+	    		}else{
+	    			List<String> L = pl.getConfig().getStringList("chunks");
+	    			L.remove(chest.getLocation().getChunk().toString());
+	    			pl.getConfig().set("chunks", L);
+	    		}
+	    	}
+	    }, time.intValue());
+	}
 }
